@@ -43,6 +43,7 @@ type ModelConfig struct {
 
 	// TTL is the idle duration after which an unused model process is stopped.
 	// A zero value means the process runs indefinitely.
+	// Personal note: I default this to 10m in my configs to keep RAM free.
 	TTL Duration `yaml:"ttl,omitempty" json:"ttl,omitempty"`
 
 	// UseGPU hints that this model requires GPU resources.
@@ -66,6 +67,11 @@ type Duration struct {
 }
 
 func (d *Duration) UnmarshalYAML(value *yaml.Node) error {
+	// Allow empty/missing duration values to default to zero instead of erroring.
+	if value.Value == "" {
+		d.Duration = 0
+		return nil
+	}
 	parsed, err := time.ParseDuration(value.Value)
 	if err != nil {
 		return fmt.Errorf("invalid duration %q: %w", value.Value, err)
@@ -86,38 +92,4 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("parsing config file: %w", err)
 	}
 
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid config: %w", err)
-	}
-
-	return &cfg, nil
-}
-
-// Validate checks that the configuration is semantically valid.
-func (c *Config) Validate() error {
-	if len(c.Models) == 0 {
-		return fmt.Errorf("at least one model must be defined")
-	}
-
-	for name, model := range c.Models {
-		if model.Cmd == "" {
-			return fmt.Errorf("model %q: cmd is required", name)
-		}
-		if model.Proxy == "" {
-			return fmt.Errorf("model %q: proxy is required", name)
-		}
-	}
-
-	for groupName, group := range c.Groups {
-		if len(group.Members) == 0 {
-			return fmt.Errorf("group %q: members list must not be empty", groupName)
-		}
-		for _, member := range group.Members {
-			if _, ok := c.Models[member]; !ok {
-				return fmt.Errorf("group %q: member %q is not a defined model", groupName, member)
-			}
-		}
-	}
-
-	return nil
-}
+	if err := cfg.Validate();
