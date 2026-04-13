@@ -84,12 +84,19 @@ func (d *Duration) UnmarshalYAML(value *yaml.Node) error {
 func LoadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("reading config file: %w", err)
+		return nil, fmt.Errorf("reading config file %q: %w", path, err)
 	}
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parsing config file: %w", err)
+		return nil, fmt.Errorf("parsing config file %q: %w", path, err)
 	}
 
-	if err := cfg.Validate();
+	// Personal default: if no healthCheckTimeout is set, use 30s.
+	// The upstream default feels too short for larger models on my machine.
+	if cfg.HealthCheckTimeout.Duration == 0 {
+		cfg.HealthCheckTimeout.Duration = 30 * time.Second
+	}
+
+	return &cfg, nil
+}
