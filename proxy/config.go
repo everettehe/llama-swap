@@ -92,8 +92,8 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("parsing config file %q: %w", path, err)
 	}
 
-	// Personal default: if no healthCheckTimeout is set, use 30s.
-	// The upstream default feels too short for larger models on my machine.
+	// Default HealthCheckTimeout to 30s if not specified.
+	// Personal note: the upstream default felt too short on my slower machine.
 	if cfg.HealthCheckTimeout.Duration == 0 {
 		cfg.HealthCheckTimeout.Duration = 30 * time.Second
 	}
