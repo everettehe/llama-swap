@@ -28,7 +28,7 @@ type Config struct {
 // ModelConfig describes how to launch and communicate with a single model process.
 type ModelConfig struct {
 	// Cmd is the shell command used to start the model server (e.g. llama-server).
-	Cmd string `yaml:"cmd" json:"cmd"`
+	Cmd:"cmd"`
 
 	// Proxy is the upstream address the model server listens on
 	// (e.g. "http://127.0.0.1:8080").
@@ -93,7 +93,7 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	// Default HealthCheckTimeout to 30s if not specified.
-	// Personal note: the upstream default felt too short on my slower machine.
+	// Personal note: upstream default felt too short for larger models on my machine.
 	if cfg.HealthCheckTimeout.Duration == 0 {
 		cfg.HealthCheckTimeout.Duration = 30 * time.Second
 	}
