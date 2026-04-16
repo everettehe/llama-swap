@@ -28,7 +28,7 @@ type Config struct {
 // ModelConfig describes how to launch and communicate with a single model process.
 type ModelConfig struct {
 	// Cmd is the shell command used to start the model server (e.g. llama-server).
-	Cmd:"cmd"`
+	Cmd string `yaml:"cmd" json:"cmd"`
 
 	// Proxy is the upstream address the model server listens on
 	// (e.g. "http://127.0.0.1:8080").
@@ -84,18 +84,17 @@ func (d *Duration) UnmarshalYAML(value *yaml.Node) error {
 func LoadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("reading config file %q: %w", path, err)
+		return nil, fmt.Errorf("read config: %w", err)
 	}
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parsing config file %q: %w", path, err)
+		return nil, fmt.Errorf("parse config: %w", err)
 	}
 
-	// Default HealthCheckTimeout to 30s if not specified.
-	// Personal note: upstream default felt too short for larger models on my machine.
-	if cfg.HealthCheckTimeout.Duration == 0 {
-		cfg.HealthCheckTimeout.Duration = 30 * time.Second
+	// Default LogLevel to "info" if not specified.
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = "info"
 	}
 
 	return &cfg, nil
