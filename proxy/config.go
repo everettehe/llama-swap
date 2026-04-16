@@ -84,17 +84,18 @@ func (d *Duration) UnmarshalYAML(value *yaml.Node) error {
 func LoadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("read config: %w", err)
+		return nil, fmt.Errorf("reading config file %q: %w", path, err)
 	}
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parse config: %w", err)
+		return nil, fmt.Errorf("parsing config file %q: %w", path, err)
 	}
 
-	// Default LogLevel to "info" if not specified.
-	if cfg.LogLevel == "" {
-		cfg.LogLevel = "info"
+	// Default HealthCheckTimeout to 30s if not set; I found the original
+	// zero-value caused confusing instant failures on slower machines.
+	if cfg.HealthCheckTimeout.Duration == 0 {
+		cfg.HealthCheckTimeout.Duration = 30 * time.Second
 	}
 
 	return &cfg, nil
